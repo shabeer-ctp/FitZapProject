@@ -1,0 +1,106 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Form</title>
+  <link rel="stylesheet" href="{% static 'css/login/login.css' %}">
+</head>
+<body>
+  <div class="wrapper">
+    <form action="{% url 'login' %}" method="post">
+      {% csrf_token %}
+      <h2>Login Form</h2>
+        <div class="input-field">
+        <input type="text" name="username" required>
+        <label>Enter your email</label>
+      </div>
+      <div class="input-field">
+        <input type="password" name="password" required>
+        <label>Enter your password</label>
+      </div>
+      <div class="forget">
+        <label for="remember">
+          <input type="checkbox" id="remember">
+          <p>Remember me</p>
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+      <button type="submit">Log In</button>
+      <div class="register">
+        <p>Don't have an account? <a href="{% url 'Register' %}">Register</a></p>
+      </div>
+    </form>
+  </div>
+</body>
+</html> {% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="{% static 'css/login/login.css' %}">
+</head>
+<body>
+  <div class="wrapper">
+    <form action="{% url 'login' %}" method="post">
+      {% csrf_token %}
+      <h2>Login</h2>
+
+      <!-- Display error or success messages -->
+      {% if messages %}
+        <ul class="messages">
+          {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <!-- Username Input -->
+      <div class="input-field">
+        <label for="username"></label>
+        <input type="text" id="username" name="username" placeholder="Enter your username or email" required>
+      </div>
+
+      <!-- Password Input -->
+      <div class="input-field">
+        <label for="password"></label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+
+      <!-- Remember Me & Forgot Password -->
+      <div class="forget">
+        <label for="remember">
+          <input type="checkbox" id="remember" name="remember_me">
+          Remember me
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit">Log In</button>
+
+      <!-- Registration Link -->
+      <div class="register">
+        <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+      </div>
+    </form>
+  </div>
+
+  <!-- Optional JavaScript for Password Visibility Toggle -->
+  <script>
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.createElement('span');
+    togglePassword.innerHTML = '&#128065;'; // Eye icon
+    togglePassword.style.cursor = 'pointer';
+    togglePassword.onclick = function () {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+    };
+    passwordInput.parentElement.appendChild(togglePassword);
+  </script>
+</body>
+</html>
