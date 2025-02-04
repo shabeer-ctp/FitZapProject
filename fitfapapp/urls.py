@@ -13,5 +13,6 @@ urlpatterns = [
     path('register/', views.Registration_page, name='register'),
     path('calories/', views.calorie_calculator, name='calorie_calculator'),
     path('logout/', views.logout_user, name='logout'),
+    path('workouts/', views.workout_list, name='workout_list'),
 
 ]

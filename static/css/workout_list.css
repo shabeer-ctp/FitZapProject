@@ -1,0 +1,29 @@
+body {
+    background-color: #f8f9fa;
+}
+
+h2 {
+    color: #343a40;
+}
+
+.table {
+    background-color: white;
+}
+
+.table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn {
+    margin: 2px;
+}
+
+.input-group {
+    max-width: 500px;
+    margin: auto;
+}

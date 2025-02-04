@@ -109,9 +109,9 @@ https://templatemo.com/tm-548-training-studio
             <div class="row">
                 <div class="col-lg-6 offset-lg-3">
                     <div class="section-heading">
-                        <h2>Choose <em>Program</em></h2>
+                        <h2>Added <em>Items</em></h2>
                         <img src="static/images/line-dec.png" alt="waves">
-                        <p>Training Studio is free CSS template for gyms and fitness centers. You are allowed to use this layout for your business website.</p>
+                        <p></p>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -121,9 +121,9 @@ https://templatemo.com/tm-548-training-studio
                                 <img src="static/images/features-first-icon.png" alt="First One">
                             </div>
                             <div class="right-content">
-                                <h4>Basic Fitness</h4>
-                                <p>Please do not re-distribute this template ZIP file on any template collection website. This is not allowed.</p>
-                                <a href="#" class="text-button">Discover More</a>
+                                <h4>Food Items</h4>
+                                <p>comprehensive database of food items with nutritional details such as calories.</p>
+                                <a href="{% url 'food_items_list' %}" class="text-button">Discover More</a>
                             </div>
                         </li>
                         <li class="feature-item">
@@ -131,12 +131,12 @@ https://templatemo.com/tm-548-training-studio
                                 <img src="static/images/features-first-icon.png" alt="second one">
                             </div>
                             <div class="right-content">
-                                <h4>New Gym Training</h4>
-                                <p>If you wish to support TemplateMo website via PayPal, please feel free to contact us. We appreciate it a lot.</p>
-                                <a href="#" class="text-button">Discover More</a>
+                                <h4>Workouts</h4>
+                                <p>database of workouts with details on calories burned per hour based on body weight.</p>
+                                <a href="{% url 'workout_list' %}" class="text-button">Discover More</a>
                             </div>
                         </li>
-                        <li class="feature-item">
+                        {% comment %} <li class="feature-item">
                             <div class="left-icon">
                                 <img src="static/images/features-first-icon.png" alt="third gym training">
                             </div>
@@ -179,7 +179,7 @@ https://templatemo.com/tm-548-training-studio
                                 <p>Suspendisse fringilla et nisi et mattis. Curabitur sed finibus nisi. Integer nibh sapien, vehicula et auctor.</p>
                                 <a href="#" class="text-button">Discover More</a>
                             </div>
-                        </li>
+                        </li> {% endcomment %}
                     </ul>
                 </div>
             </div>

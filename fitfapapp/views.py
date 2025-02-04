@@ -7,40 +7,51 @@ from .forms import FoodItemForm, WorkoutForm
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 # Home View
 def home(request):
     return render(request, 'home.html', {'user': request.user})  # Render the home template
 
 # Food Items List View
+@login_required
 def food_items_list(request):
-    food_items = FoodItem.objects.all()
+    food_items = FoodItem.objects.filter(user=request.user)  # Fetch only the logged-in user's items
     return render(request, 'food_items_list.html', {'food_items': food_items})
+
+@login_required
+def workout_list(request):
+    workouts = Workout.objects.filter(user=request.user)  # Show only logged-in user's workouts
+    return render(request, 'workout_list.html', {'workouts': workouts})
 
 # Add Food Item View
 from django.shortcuts import render, redirect
 from fitfapapp.models import FoodItem
 
+@login_required  # Ensure only logged-in users can add food items
 def add_food_item(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         calories = request.POST.get('calories')
-        FoodItem.objects.create(name=name, calories=calories)
-        return redirect('food_items_list')  # Adjust the redirect URL to your actual food items list view
+
+        # Store food item under the logged-in user
+        FoodItem.objects.create(user=request.user, name=name, calories=calories)
+
+        return redirect('food_items_list')  # Adjust to your actual food items list view
+    
     return render(request, 'add_food_item.html')
 
 
-
 # Add Workout View
+@login_required  # Ensure only logged-in users can add workouts
 def add_workout(request):
     if request.method == 'POST':
-        # Create the workout from the form data
         form = WorkoutForm(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['name']
-            calories_burned = form.cleaned_data['calories_burned']
-            Workout.objects.create(name=name, calories_burned=calories_burned)
-            return redirect('calorie_calculator')  # Redirect to home or any other view
+            workout = form.save(commit=False)  # Do not save yet
+            workout.user = request.user  # Assign the logged-in user
+            workout.save()  # Now save with user info
+            return redirect('workout_list')  # Adjust as needed
     else:
         form = WorkoutForm()
 
