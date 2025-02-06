@@ -1,52 +1,5 @@
+
 {% comment %} <!DOCTYPE html>
-<html>
-<head>
-  {% load static %}
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registration Form</title>
-  <link rel="stylesheet" href="{% static 'css/Register/Register.css' %}">
-</head>
-<body>
-  <div class="wrapper">
-    <form action="{% url 'login' %}" method="post">
-      {% csrf_token %}
-      <h2>Get Started</h2>
-        <div class="input-field">
-        <input type="text" name="username" required>
-        <label>Username</label>
-      </div>
-      <div class="input-field">
-        <input type="text" name="email" required>
-        <label>Email</label>
-      </div>
-      <div class="input-field">
-        <input type="password" name="password" required>
-        <label>Password</label>
-      </div>
-      <div class="input-field">
-        <input type="password" name="confirmpassword" required>
-        <label>Confirm Password</label>
-      </div>
-      {% comment %} <div class="forget">
-        <label for="remember">
-          <input type="checkbox" id="remember">
-          <p>Remember me</p>
-        </label>
-        <a href="#">Forgot password?</a>
-      </div> 
-      <button type="submit">Signup</button>
-      <div class="register">
-        <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-      </div>
-    </form>
-  </div>
-</body>
-</html> {% endcomment %}
-
-
-
-<!DOCTYPE html>
 <html>
 <head>
   {% load static %}
@@ -93,5 +46,116 @@
       </div>
     </form>
   </div>
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Form</title>
+  <link rel="stylesheet" href="{% static 'css/Register/Register.css' %}">
+</head>
+<body>
+  <div class="wrapper">
+    <form id="registerForm" action="{% url 'register' %}" method="post">
+      {% csrf_token %}
+      <h2>Get Started</h2>
+
+      <div class="input-field">
+        <input type="text" id="username" name="username" placeholder="Username" required>
+        <p class="error" id="usernameError"></p>
+      </div>
+      <div class="input-field">
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <p class="error" id="emailError"></p>
+      </div>
+      <div class="input-field">
+        <input type="password" id="password" name="password" placeholder="Password" minlength="8" required>
+        <p class="error" id="passwordError"></p>
+      </div>
+      <div class="input-field">
+        <input type="password" id="confirmpassword" name="confirmpassword" placeholder="Confirm Password" minlength="8" required>
+        <p class="error" id="confirmpasswordError"></p>
+      </div>
+
+      <button type="submit" id="signupBtn">Signup</button>
+      <p id="responseMessage"></p> <!-- To show success/error messages -->
+
+      <div class="register">
+        <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+  
+      // Clear previous errors
+      document.querySelectorAll('.error').forEach(el => el.innerText = '');
+      let responseMessage = document.getElementById('responseMessage');
+      responseMessage.innerText = '';
+  
+      // Get form values
+      let username = document.getElementById('username').value;
+      let email = document.getElementById('email').value;
+      let password = document.getElementById('password').value;
+      let confirmpassword = document.getElementById('confirmpassword').value;
+      let signupBtn = document.getElementById('signupBtn');
+  
+      // Get CSRF token from cookies (Better than hidden input)
+      function getCSRFToken() {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              let cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                  let cookie = cookies[i].trim();
+                  if (cookie.startsWith('csrftoken=')) {
+                      cookieValue = cookie.substring('csrftoken='.length, cookie.length);
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+  
+      signupBtn.disabled = true;
+      signupBtn.innerText = "Signing up...";
+  
+      let response = await fetch('/api/register/', {  // ✅ Fixed URL
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCSRFToken()  // ✅ Fixed CSRF handling
+          },
+          body: JSON.stringify({ username, email, password, confirmpassword })
+      });
+  
+      let data = await response.json();
+      signupBtn.disabled = false;
+      signupBtn.innerText = "Signup";
+  
+      if (response.ok) {
+          responseMessage.style.color = "green";
+          responseMessage.innerText = data.message;
+          setTimeout(() => window.location.href = "/login/", 2000);  // ✅ Fixed Redirect
+      } else {
+          responseMessage.style.color = "red";
+          if (data.error) {
+              responseMessage.innerText = data.error;  // General error
+          } else {
+              // Display field-specific errors
+              if (data.username) document.getElementById('usernameError').innerText = data.username;
+              if (data.email) document.getElementById('emailError').innerText = data.email;
+              if (data.password) document.getElementById('passwordError').innerText = data.password;
+              if (data.confirmpassword) document.getElementById('confirmpasswordError').innerText = data.confirmpassword;
+          }
+      }
+  });
+  
+  </script>
 </body>
 </html>

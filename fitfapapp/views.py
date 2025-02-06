@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+
+from fitfapapp.serializers import RegisterSerializer
 from .models import FoodItem, Workout
 from django.db import models
 from django.contrib.auth import authenticate, login, logout
@@ -8,6 +10,11 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.contrib.auth.hashers import make_password
+from rest_framework import status
+from .serializers import LoginSerializer
 
 # Home View
 def home(request):
@@ -108,6 +115,17 @@ def calories_summary(request):
         'net_calories': net_calories,
     })
 
+@api_view(['POST'])
+def login_api(request):
+    serializer = LoginSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.validated_data["user"]  # Extract user
+        login(request, user)  # Log in user
+        return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 def login_page(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -149,10 +167,12 @@ def login_page(request):
 def Registration_page(request):
     if request.method == 'POST':
         # Collect data from the registration form
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        confirm_password = request.POST['confirmpassword']
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirmpassword', '')
+        
+        
         
         # Validate password match
         if password != confirm_password:
@@ -178,9 +198,20 @@ def Registration_page(request):
             messages.error(request, f'Error during registration: {e}')
             return render(request, 'register.html')
 
-    else:
-        # Handle GET request by rendering the registration form
-        return render(request, 'register.html')
+    return render(request, 'register.html')
+
+
+@api_view(['POST'])
+def register_api(request):
+    serializer = RegisterSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'Registration successful!'}, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
     
 def logout_user(request):
     logout(request)
