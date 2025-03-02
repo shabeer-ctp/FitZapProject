@@ -61,6 +61,7 @@ https://templatemo.com/tm-548-training-studio
                             {% if user.is_authenticated %}
                                 <li><a href="{% url 'add_food_item' %}">Add Food</a></li>
                                 <li><a href="{% url 'add_workout' %}">Add Workout</a></li>
+                                <li><a href="{% url 'set_goal' %}">Set a Goal</a></li>
                                 <li><a href="{% url 'calorie_calculator' %}">Calories Burn</a></li>
                             {% endif %}
                             

@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,18 +35,85 @@
                 </tr>
             </thead>
             <tbody id="foodTable">
-                {% for item in food_items %}
+                {% for item in food_items_list %}
                 <tr>
                     <td>{{ item.name }}</td>
                     <td>{{ item.calories }}</td>
                     <td>
-                        <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
-                        <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                        <a href="{% url 'delete_food_item' item.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fas fa-trash"></i> Delete</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="3" class="text-center text-muted">No food items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add New Food Item Button -->
+    <div class="text-center mt-4">
+        <a href="{% url 'add_food_item' %}" class="btn btn-success"><i class="fas fa-plus"></i> Add New Food Item</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS & JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/food_items.js' %}"></script>
+
+</body>
+</html> {% endcomment %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Items List</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/food_items.css' %}">
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Food Items List</h2>
+
+    <!-- Search Bar -->
+    <div class="input-group mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search food item..." onkeyup="filterItems()">
+        <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+    </div>
+
+    <!-- Food Items Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Food Item</th>
+                    <th>Calories</th>
+                    <th>Unit Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="foodTable">
+                {% for item in food_items_list %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.calories }}</td>
+                    <td>{{ item.unit_type }}</td>
+                    <td>
+                        <a href="{% url 'delete_food_item' item.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fas fa-trash"></i> Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No food items found.</td>
                 </tr>
                 {% endfor %}
             </tbody>

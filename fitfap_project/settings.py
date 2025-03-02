@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': 'fitzapdb',
         'USER': 'postgres',      # Replace with your PostgreSQL username
         'PASSWORD': '1234',  # Replace with your PostgreSQL password
-        'HOST': 'localhost',          # Use 'localhost' if PostgreSQL is running locally
+        'HOST': '0.0.0.0',          # Use 'localhost' if PostgreSQL is running locally
         'PORT': '5432',
     }
 }
