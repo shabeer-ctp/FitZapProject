@@ -57,7 +57,7 @@ ROOT_URLCONF = 'fitfap_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'templates')],
+        'DIRS': [os.path.join(BASE_DIR,'fitfapapp/','templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
