@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-ual28l0rd06gy8#0&3ot5m%sn_-xyns9y(7a=r!_siizh$$9&7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['43.204.218.180', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['43.204.218.180', 'localhost', '127.0.0.1','0.0.0.0']
 
 
 # Application definition
@@ -57,7 +57,7 @@ ROOT_URLCONF = 'fitfap_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'fitfapapp','templates')],
+        'DIRS': [os.path.join(BASE_DIR,'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
