@@ -333,7 +333,7 @@ def Registration_page(request):
             messages.error(request, f'Error during registration: {e}')
             return render(request, 'register.html')
 
-    return render(request, 'register.html')
+    return render(request, 'fitfapapp/register.html')
 
 
 @api_view(['POST'])
