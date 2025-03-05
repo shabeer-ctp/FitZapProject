@@ -29,135 +29,6 @@
                     </select>
                     <label>Quantity:</label>
                     <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
-                </div>
-            </div>
-            <button type="button" id="add-food-item" class="btn btn-secondary mt-2">+ Add More Food</button>
-            <p>Total Calories from Food: <strong id="total-calories-intake">0</strong> kcal</p>
-        </div>
-    </div>
-
-    <!-- Workout Section -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h2>Workout</h2>
-            <div id="workout-container">
-                <div class="workout-row">
-                    <label>Select Workout:</label>
-                    <select name="workout[]" class="form-control workout-item">
-                        <option value="">-- Choose a workout --</option>
-                        {% for workout in workouts %}
-                        <option value="{{ workout.id }}" data-burn="{{ workout.calories_burned }}">
-                            {{ workout.name }} (Burns {{ workout.calories_burned }} kcal/30 min)
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <label>Duration (minutes):</label>
-                    <input type="number" name="duration[]" class="form-control duration" min="1" step="1" required>
-                </div>
-            </div>
-            <button type="button" id="add-workout" class="btn btn-secondary mt-2">+ Add More Workout</button>
-            <p>Total Calories Burned: <strong id="total-calories-burnt">0</strong> kcal</p>
-        </div>
-    </div>
-
-    <!-- Net Calories Section -->
-    <div class="card mt-4">
-        <div class="card-body text-center">
-            <button type="button" id="calculate-total" class="btn btn-primary btn-lg">Calculate Total Calories</button>
-            <h3 class="mt-3">Net Calories</h3>
-            <p><strong id="net-calories">0</strong> kcal</p>
-            <p>Estimated Weight Change Per Week: <strong id="weight-change">0</strong> kg</p>
-        </div>
-    </div>
-</div>
-
-<script>
-$(document).ready(function() {
-    function updatePlaceholder(selectElement) {
-        let unitType = $(selectElement).find(':selected').data('unit');
-        let quantityInput = $(selectElement).closest(".food-item-row").find(".quantity");
-        
-        if (unitType === "count") {
-            quantityInput.attr("placeholder", "Enter quantity in count");
-        } else if (unitType === "g") {
-            quantityInput.attr("placeholder", "Enter quantity in grams");
-        } else if (unitType === "ml") {
-            quantityInput.attr("placeholder", "Enter quantity in ml");
-        } else {
-            quantityInput.attr("placeholder", "Enter quantity");
-        }
-    }
-
-    function updateTotalCalories() {
-        let totalCaloriesIntake = 0;
-        let totalCaloriesBurnt = 0;
-
-        $(".food-item-row").each(function() {
-            let selectedOption = $(this).find("select.food-item option:selected");
-            let caloriesPerUnit = parseFloat(selectedOption.data("calories")) || 0;
-            let unitType = selectedOption.data("unit");
-            let quantity = parseFloat($(this).find("input.quantity").val()) || 0;
-            let calculatedCalories = (unitType === "g" || unitType === "ml") ? (caloriesPerUnit / 100) * quantity : caloriesPerUnit * quantity;
-            totalCaloriesIntake += calculatedCalories;
-        });
-
-        $(".workout-row").each(function() {
-            let selectedOption = $(this).find("select.workout-item option:selected");
-            let caloriesBurnPer30Min = parseFloat(selectedOption.data("burn")) || 0;
-            let duration = parseFloat($(this).find("input.duration").val()) || 0;
-            let calculatedBurnedCalories = (caloriesBurnPer30Min / 30) * duration;
-            totalCaloriesBurnt += calculatedBurnedCalories;
-        });
-
-        let netCalories = totalCaloriesIntake - totalCaloriesBurnt;
-        let weightChange = (netCalories / 7700).toFixed(2);
-
-        $("#total-calories-intake").text(totalCaloriesIntake.toFixed(2) + " kcal");
-        $("#total-calories-burnt").text(totalCaloriesBurnt.toFixed(2) + " kcal");
-        $("#net-calories").text(netCalories.toFixed(2) + " kcal");
-        $("#weight-change").text(weightChange + " kg");
-    }
-
-    $(document).on("change", ".food-item, .quantity, .workout-item, .duration", function() {
-        updateTotalCalories();
-    });
-
-    $("#calculate-total").click(updateTotalCalories);
-});
-</script>
-
-</body>
-</html> {% endcomment %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calorie Calculator</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-
-<div class="container mt-5">
-    <h1 class="text-center">Calorie Calculator</h1>
-
-    <!-- Food Intake Section -->
-    <div class="card">
-        <div class="card-body">
-            <h2>Food Intake</h2>
-            <div id="food-items-container">
-                <div class="food-item-row">
-                    <label>Select Food Item:</label>
-                    <select name="food_item[]" class="form-control food-item">
-                        <option value="">-- Choose a food item --</option>
-                        {% for food in food_items_list %}
-                            <option value="{{ food.id }}" data-calories="{{ food.calories }}" data-unit="{{ food.unit_type }}">
-                                {{ food.name }} ({{ food.calories }} kcal per {{ food.unit_type }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <label>Quantity:</label>
-                    <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
                     <button type="button" class="btn btn-danger remove-food-item mt-2">Remove</button>
                 </div>
             </div>
@@ -276,6 +147,155 @@ $(document).ready(function() {
     });
 
     $("#calculate-total").click(updateTotalCalories);
+});
+</script>
+
+</body>
+</html> {% endcomment %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Calculator</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="text-center">Calorie Calculator</h1>
+
+    <!-- Food Intake Section -->
+    <div class="card">
+        <div class="card-body">
+            <h2>Food Intake</h2>
+            <div id="food-items-container"></div>
+            <button type="button" id="add-food-item" class="btn btn-secondary mt-2">+ Add More Food</button>
+            <p>Total Calories from Food: <strong id="total-calories-intake">0</strong> kcal</p>
+        </div>
+    </div>
+
+    <!-- Workout Section -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2>Workout</h2>
+            <div id="workout-container"></div>
+            <button type="button" id="add-workout" class="btn btn-secondary mt-2">+ Add More Workout</button>
+            <p>Total Calories Burned: <strong id="total-calories-burnt">0</strong> kcal</p>
+        </div>
+    </div>
+
+    <!-- Net Calories Section -->
+    <div class="card mt-4">
+        <div class="card-body text-center">
+            <button type="button" id="calculate-total" class="btn btn-primary btn-lg">Calculate Total Calories</button>
+            <h3 class="mt-3">Net Calories</h3>
+            <p><strong id="net-calories">0</strong> kcal</p>
+            <p>Estimated Weight Change Per Week: <strong id="weight-change">0</strong> kg</p>
+        </div>
+    </div>
+
+    <!-- Weekly Progress Chart -->
+    <div class="card mt-4">
+        <div class="card-body text-center">
+            <h3>Weekly Progress</h3>
+            <canvas id="progressChart"></canvas>
+            <p>Progress Status: <strong id="progress-status">Not Calculated</strong></p>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let weeklyProgress = [];
+    let userGoal = "maintain"; // Replace with user’s actual goal from the database
+
+    function addFoodItem() {
+        let foodItemRow = `
+            <div class="food-item-row">
+                <label>Select Food Item:</label>
+                <select name="food_item[]" class="form-control food-item">
+                    <option value="">-- Choose a food item --</option>
+                    {% for food in food_items_list %}
+                        <option value="{{ food.id }}" data-calories="{{ food.calories }}" data-unit="{{ food.unit_type }}">
+                            {{ food.name }} ({{ food.calories }} kcal per {{ food.unit_type }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <label>Quantity:</label>
+                <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
+                <button type="button" class="btn btn-danger remove-food-item mt-2">Remove</button>
+            </div>`;
+        $("#food-items-container").append(foodItemRow);
+    }
+
+    function addWorkoutItem() {
+        let workoutRow = `
+            <div class="workout-row">
+                <label>Select Workout:</label>
+                <select name="workout[]" class="form-control workout-item">
+                    <option value="">-- Choose a workout --</option>
+                    {% for workout in workouts %}
+                    <option value="{{ workout.id }}" data-burn="{{ workout.calories_burned }}">
+                        {{ workout.name }} (Burns {{ workout.calories_burned }} kcal/30 min)
+                    </option>
+                    {% endfor %}
+                </select>
+                <label>Duration (minutes):</label>
+                <input type="number" name="duration[]" class="form-control duration" min="1" step="1" required>
+                <button type="button" class="btn btn-danger remove-workout mt-2">Remove</button>
+            </div>`;
+        $("#workout-container").append(workoutRow);
+    }
+
+    function updateProgressChart() {
+        let ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                datasets: [{
+                    label: 'Net Calories',
+                    data: weeklyProgress,
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            }
+        });
+
+        let totalWeeklyCalories = weeklyProgress.reduce((a, b) => a + b, 0);
+        let weeklyWeightChange = (totalWeeklyCalories / 7700).toFixed(2);
+        let progressStatus = (userGoal === "gain" && weeklyWeightChange > 0) ||
+                             (userGoal === "lose" && weeklyWeightChange < 0) ||
+                             (userGoal === "maintain" && Math.abs(weeklyWeightChange) < 0.2) ? "Good" : "Bad";
+        $("#progress-status").text(progressStatus);
+    }
+
+    $("#calculate-total").click(function() {
+        let totalCaloriesIntake = parseFloat($("#total-calories-intake").text());
+        let totalCaloriesBurnt = parseFloat($("#total-calories-burnt").text());
+
+        $.post("/save_daily_calories/", {
+            total_calories_intake: totalCaloriesIntake,
+            total_calories_burnt: totalCaloriesBurnt,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        }, function(response) {
+            console.log("Daily data saved!");
+        });
+
+        $.get("/get_weekly_progress/", function(data) {
+            $("#progress-status").text(data.progress_status);
+
+            weeklyProgress = data.weekly_data.map(d => d.net_calories);
+            updateProgressChart();
+        });
+    });
+
+    $("#add-food-item").click(addFoodItem);
+    $("#add-workout").click(addWorkoutItem);
+    addFoodItem();
+    addWorkoutItem();
 });
 </script>
 

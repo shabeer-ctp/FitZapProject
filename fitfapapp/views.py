@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from fitfapapp.serializers import RegisterSerializer
-from .models import FoodItem, Workout, UserGoal
+from .models import DailyCalorieRecord, FoodItem, Workout, UserGoal
 from django.db import models
 from django.contrib.auth import authenticate, login, logout
 from .forms import FoodItemForm, WorkoutForm
@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from .serializers import LoginSerializer
+from django.utils.timezone import now, timedelta
 
 # Home View
 def home(request):
@@ -375,3 +376,44 @@ def set_goal(request):
     
     # If GET request, render the goal setting page (optional)
     return render(request, 'set_goal.html')
+
+def save_daily_calories(request):
+    if request.method == "POST":
+        user = request.user
+        total_calories_intake = float(request.POST.get('total_calories_intake', 0))
+        total_calories_burnt = float(request.POST.get('total_calories_burnt', 0))
+
+        daily_record, created = DailyCalorieRecord.objects.update_or_create(
+            user=user,
+            date=now().date(),
+            defaults={'total_calories_intake': total_calories_intake, 'total_calories_burnt': total_calories_burnt}
+        )
+
+        return JsonResponse({"message": "Data saved successfully!"})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def get_weekly_progress(request):
+    user = request.user
+    last_week = now().date() - timedelta(days=6)
+    weekly_records = DailyCalorieRecord.objects.filter(user=user, date__gte=last_week).order_by('date')
+
+    weekly_data = []
+    net_weekly_calories = 0
+
+    for record in weekly_records:
+        net_weekly_calories += record.net_calories
+        weekly_data.append({
+            "date": record.date.strftime('%Y-%m-%d'),
+            "net_calories": record.net_calories
+        })
+
+    # Determine progress
+    user_goal = "maintain"  # Fetch user goal from your goal model
+    progress_status = "Good" if (
+        (user_goal == "gain" and net_weekly_calories > 0) or 
+        (user_goal == "lose" and net_weekly_calories < 0) or 
+        (user_goal == "maintain" and abs(net_weekly_calories) < 500)
+    ) else "Bad"
+
+    return JsonResponse({"weekly_data": weekly_data, "progress_status": progress_status})

@@ -65,3 +65,16 @@ def create_default_items(sender, instance, created, **kwargs):
         for workout in default_workouts:
             Workout.objects.create(user=instance, name=workout["name"], calories_burned=workout["calories_burned"])
 
+from django.db import models
+from django.contrib.auth.models import User
+from datetime import date
+
+class DailyCalorieRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField(default=date.today)
+    total_calories_intake = models.FloatField()
+    total_calories_burnt = models.FloatField()
+
+    @property
+    def net_calories(self):
+        return self.total_calories_intake - self.total_calories_burnt
