@@ -17,6 +17,13 @@ urlpatterns = [
     path('api/login/', login_api, name='login_api'),
     path('register/', views.Registration_page, name='register'),  # Renders the registration page
     path('api/register/', views.register_api, name='register_api'),
+    path('api/food-items/', views.food_item_list_api),
+    path('api/food-items/<int:id>/delete/', views.delete_food_item_api),
+    path('api/workouts/', views.workout_list_api),
+    path('api/workouts/<int:id>/delete/', views.delete_workout_item_api),
+    path('api/food-items/add/', views.add_food_item_api),
+    path('api/workouts/add/', views.add_workout_item_api),
+
     path('calories/', views.calorie_calculator, name='calorie_calculator'),
     path('logout/', views.logout_user, name='logout'),
     path('workouts/', views.workout_list, name='workout_list'),

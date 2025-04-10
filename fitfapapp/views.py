@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from fitfapapp.serializers import RegisterSerializer
+from .serializers import RegisterSerializer, FoodItemSerializer, WorkoutSerializer
 from .models import DailyCalorieRecord, FoodItem, Workout, UserGoal
 from django.db import models
 from django.contrib.auth import authenticate, login, logout
@@ -10,12 +10,13 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from .serializers import LoginSerializer
 from django.utils.timezone import now, timedelta
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # Home View
 def home(request):
@@ -37,23 +38,7 @@ from django.shortcuts import render, redirect
 from fitfapapp.models import FoodItem
 
 
-# def add_food_item(request):
-#     if request.method == 'POST':
-#         name = request.POST.get('name').strip().lower()  # Normalize name input
-#         calories = request.POST.get('calories')
 
-#         # Check if the food item already exists for the user
-#         if FoodItem.objects.filter(user=request.user, name__iexact=name).exists():
-#             messages.error(request, "Item already exists!")
-#             return redirect('add_food_item')  # Stay on the form page
-        
-#         # If item is unique, create and save it
-#         FoodItem.objects.create(user=request.user, name=name, calories=calories)
-#         messages.success(request, "Food item added successfully!")
-
-#         return redirect('food_items_list')  # Redirect to food list
-    
-#     return render(request, 'add_food_item.html')
 def add_food_item(request):
     if request.method == 'POST':
         name = request.POST.get('name').strip().lower()  # Normalize name input
@@ -231,6 +216,7 @@ def calories_summary(request):
     })
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_api(request):
     serializer = LoginSerializer(data=request.data)
 
@@ -295,6 +281,7 @@ def Registration_page(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def register_api(request):
     serializer = RegisterSerializer(data=request.data)
 
@@ -304,7 +291,69 @@ def register_api(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def food_item_list_api(request):
+    items = FoodItem.objects.filter(user=request.user)
+    serializer = FoodItemSerializer(items, many=True)
+    return Response({"food_items": serializer.data}, status=200)
 
+# ----------------------------
+# Delete Food Item
+# ----------------------------
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_food_item_api(request, id):
+    try:
+        item = FoodItem.objects.get(id=id, user=request.user)
+        item.delete()
+        return Response({"message": "Food item deleted successfully"}, status=204)
+    except FoodItem.DoesNotExist:
+        return Response({"error": "Food item not found"}, status=404)
+
+# ----------------------------
+# List Workout Items (user-specific)
+# ----------------------------
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def workout_list_api(request):
+    items = Workout.objects.filter(user=request.user)
+    serializer = WorkoutSerializer(items, many=True)
+    return Response({"workouts": serializer.data}, status=200)
+
+# ----------------------------
+# Delete Workout Item
+# ----------------------------
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_workout_item_api(request, id):
+    try:
+        item = Workout.objects.get(id=id, user=request.user)
+        item.delete()
+        return Response({"message": "Workout item deleted successfully"}, status=204)
+    except Workout.DoesNotExist:
+        return Response({"error": "Workout item not found"}, status=404)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_food_item_api(request):
+    serializer = FoodItemSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user)  # assign current user
+        return Response({"message": "Food item added successfully", "data": serializer.data}, status=201)
+    return Response(serializer.errors, status=400)
+
+# ----------------------------
+# Add Workout Item
+# ----------------------------
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_workout_item_api(request):
+    serializer = WorkoutSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user)  # assign current user
+        return Response({"message": "Workout item added successfully", "data": serializer.data}, status=201)
+    return Response(serializer.errors, status=400)
     
 def logout_user(request):
     logout(request)
@@ -325,41 +374,7 @@ def save_daily_calories(request):
         return JsonResponse({"message": "Data saved successfully!"})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
-# @login_required
-# def set_goal(request):
-#     if request.method == 'POST':
-#         weight = request.POST.get('weight')
-#         goal = request.POST.get('goal')
 
-#         # Validate input
-#         if not weight or not goal:
-#             return JsonResponse({'success': False, 'error': 'Both weight and goal are required.'}, status=400)
-
-#         # Ensure weight is a valid number
-#         try:
-#             weight = float(weight)
-#             if weight <= 0:
-#                 return JsonResponse({'success': False, 'error': 'Weight must be a positive number.'}, status=400)
-#         except ValueError:
-#             return JsonResponse({'success': False, 'error': 'Invalid weight format.'}, status=400)
-
-#         # Get or create user's goal
-#         user_goal, created = UserGoal.objects.get_or_create(user=request.user)
-#         user_goal.weight = weight
-#         user_goal.goal = goal
-#         user_goal.save()
-#         print(f"Saved goal for {request.user.username}: {user_goal.weight}kg, {user_goal.goal}")
-
-
-#         # Handle AJAX request
-#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#             return JsonResponse({'success': True})
-
-#         # Redirect to calorie calculator page if form submitted normally
-#         return redirect('calorie')
-
-#     # Render goal setting page for GET request
-#     return render(request, 'set_goal.html')
 
 @login_required
 def set_goal(request):
@@ -379,10 +394,7 @@ def set_goal(request):
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Invalid weight format.'}, status=400)
 
-        # user_goal, created = UserGoal.objects.get_or_create(user=request.user)
-        # user_goal.weight = weight
-        # user_goal.goal = goal
-        # user_goal.save()
+        
         user_goal, created = UserGoal.objects.get_or_create(
             user=request.user,
             defaults={'weight': weight, 'goal': goal}
@@ -406,38 +418,7 @@ def set_goal(request):
     })
 
 
-# def get_weekly_progress(request):
-#     user = request.user
-#     last_week = now().date() - timedelta(days=6)
-#     weekly_records = DailyCalorieRecord.objects.filter(user=user, date__gte=last_week).order_by('date')
 
-#     weekly_data = []
-#     net_weekly_calories = 0
-#     day_count = 1
-
-#     for record in weekly_records:
-#         net_weekly_calories += record.net_calories
-#         weekly_data.append({
-#             "day": f"Day {day_count}",
-#             "net_calories": record.net_calories
-#         })
-#         day_count += 1
-
-#     # Fetch actual user goal
-#     user_goal_obj = UserGoal.objects.filter(user=user).first()
-#     user_goal = user_goal_obj.goal if user_goal_obj else "maintain"
-
-#     # Determine progress
-#     progress_status = "Good" if (
-#         (user_goal == "gain" and net_weekly_calories > 0) or 
-#         (user_goal == "lose" and net_weekly_calories < 0) or 
-#         (user_goal == "maintain" and abs(net_weekly_calories) < 500)
-#     ) else "Bad"
-
-#     return JsonResponse({
-#         "weekly_data": weekly_data,
-#         "progress_status": progress_status
-#     })
 from datetime import timedelta
 
 def get_weekly_progress(request):
