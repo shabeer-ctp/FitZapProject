@@ -21,8 +21,8 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
     path('workouts/', views.workout_list, name='workout_list'),
     path('set_goal/', views.set_goal, name='set_goal'),
-    path('save_daily_calories/', views.save_daily_calories, name="save_daily_calories"),
-    path('get_weekly_progress/', views.get_weekly_progress, name="get_weekly_progress"),
+    path('calories/save_daily_calories/', views.save_daily_calories, name="save_daily_calories"),
+    path('calories/get_weekly_progress/', views.get_weekly_progress, name="get_weekly_progress"),
 
 
 ]

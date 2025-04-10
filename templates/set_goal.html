@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,6 +29,59 @@
         <div id="result"></div>
     </div>
 
+    <script src="{% static 'js/goal.js' %}"></script>
+</body>
+</html> {% endcomment %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Your Goal</title>
+    <link rel="stylesheet" href="{% static 'css/goal.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Set Your Goal</h1>
+
+        {% if user_goal %}
+        <div class="alert alert-warning" style="background-color: #fff3cd; padding: 15px; margin-bottom: 20px; border: 1px solid #ffeeba; border-radius: 5px;">
+            ⚠️ You already have a goal set: 
+            <strong>{{ user_goal.goal|title }}</strong> at <strong>{{ user_goal.weight }} kg</strong>.<br>
+            Submitting this form will <strong>overwrite</strong> your current goal.
+        </div>
+        {% endif %}
+
+        <form method="POST" id="goalForm" onsubmit="return confirmGoalChange();">
+            {% csrf_token %}
+            <label for="weight">Enter your current weight (kg):</label>
+            <input type="number" id="weight" name="weight" required>
+
+            <label for="goal">Select your goal:</label>
+            <select id="goal" name="goal" required>
+                <option value="" disabled selected>Select your goal</option>
+                <option value="weight_gain">Weight Gain</option>
+                <option value="weight_loss">Weight Loss</option>
+                <option value="maintain">Maintain Weight</option>
+            </select>
+
+            <button type="submit">Set Goal</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function confirmGoalChange() {
+            {% if user_goal %}
+            return confirm("⚠️ You already have a goal set. Do you want to overwrite it?");
+            {% else %}
+            return true;
+            {% endif %}
+        }
+    </script>
+    
     <script src="{% static 'js/goal.js' %}"></script>
 </body>
 </html>

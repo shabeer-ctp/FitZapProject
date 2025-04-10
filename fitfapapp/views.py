@@ -123,60 +123,6 @@ from .models import FoodItem, Workout
 from .forms import FoodItemForm, WorkoutForm
 
 
-# def calorie_calculator(request):
-#     if not request.user.is_authenticated:
-#         return redirect('login')  # Redirect if user is not logged in
-
-#     total_calories_intake = 0
-#     total_calories_burnt = 0
-
-#     # Fetch only the logged-in user's data
-#     food_items = FoodItem.objects.filter(user=request.user)
-#     workouts = Workout.objects.filter(user=request.user)
-
-#     selected_foods = []
-#     selected_workouts = []
-
-#     if request.method == "POST":
-#         # Handle Food Intake
-#         food_ids = request.POST.getlist('food_item[]')
-#         quantities = request.POST.getlist('quantity[]')
-
-#         for food_id, quantity in zip(food_ids, quantities):
-#             try:
-#                 food = FoodItem.objects.get(id=food_id, user=request.user)  # Ensure the item belongs to the user
-#                 quantity = float(quantity)
-#                 selected_foods.append({'food': food, 'quantity': quantity})
-#                 total_calories_intake += food.calories * quantity
-#             except (FoodItem.DoesNotExist, ValueError):
-#                 pass  # Ignore invalid selections
-
-#         # Handle Workouts
-#         workout_ids = request.POST.getlist('workout[]')
-#         durations = request.POST.getlist('duration[]')
-
-#         for workout_id, duration in zip(workout_ids, durations):
-#             try:
-#                 workout = Workout.objects.get(id=workout_id, user=request.user)  # Ensure the workout belongs to the user
-#                 duration = float(duration)
-#                 selected_workouts.append({'workout': workout, 'duration': duration})
-#                 calories_per_minute = workout.calories_burned / 30  # Assuming 30 min standard
-#                 total_calories_burnt += calories_per_minute * duration
-#             except (Workout.DoesNotExist, ValueError):
-#                 pass  # Ignore invalid selections
-
-#     # Calculate Net Calories
-#     net_calories = total_calories_intake - total_calories_burnt
-
-#     return render(request, 'calorie_calculator.html', {
-#         'food_items': food_items,
-#         'workouts': workouts,
-#         'selected_foods': selected_foods,
-#         'selected_workouts': selected_workouts,
-#         'total_calories_intake': total_calories_intake,
-#         'total_calories_burnt': total_calories_burnt,
-#         'net_calories': net_calories,
-#     })
 
 @login_required
 def calorie_calculator(request):
@@ -185,6 +131,9 @@ def calorie_calculator(request):
 
     total_calories_intake = 0
     total_calories_burnt = 0
+
+    # Fetch the user's goal (if set)
+    user_goal = UserGoal.objects.filter(user=request.user).first()
 
     # Fetch only the logged-in user's data
     food_items = FoodItem.objects.filter(user=request.user)
@@ -252,6 +201,11 @@ def calorie_calculator(request):
     # Calculate Net Calories
     net_calories = total_calories_intake - total_calories_burnt
 
+    goal_text = None
+    if user_goal:
+        goal_text = f"{user_goal.goal.replace('_', ' ').title()} at {user_goal.weight}kg"
+
+    
     return render(request, 'calorie_calculator.html', {
         'food_items_list': food_items,
         'workouts': workouts,
@@ -260,7 +214,10 @@ def calorie_calculator(request):
         'total_calories_intake': round(total_calories_intake, 2),
         'total_calories_burnt': round(total_calories_burnt, 2),
         'net_calories': round(net_calories, 2),
+        'user_goal': user_goal,  # Pass goal data to template
+        'goal_text': goal_text,
     })
+
 
 # Calories Summary View
 def calories_summary(request):
@@ -352,30 +309,6 @@ def register_api(request):
 def logout_user(request):
     logout(request)
     return redirect('home')
-@login_required
-def set_goal(request):
-    if request.method == 'POST':
-        weight = request.POST.get('weight')
-        goal = request.POST.get('goal')
-
-        # Check if the user already has a goal
-        try:
-            user_goal = UserGoal.objects.get(user=request.user)
-        except UserGoal.DoesNotExist:
-            user_goal = None
-
-        if user_goal:
-            user_goal.weight = weight
-            user_goal.goal = goal
-            user_goal.save()
-        else:
-            UserGoal.objects.create(user=request.user, weight=weight, goal=goal)
-
-        # Return success response in JSON format
-        return JsonResponse({'success': True})
-    
-    # If GET request, render the goal setting page (optional)
-    return render(request, 'set_goal.html')
 
 def save_daily_calories(request):
     if request.method == "POST":
@@ -392,28 +325,154 @@ def save_daily_calories(request):
         return JsonResponse({"message": "Data saved successfully!"})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+# @login_required
+# def set_goal(request):
+#     if request.method == 'POST':
+#         weight = request.POST.get('weight')
+#         goal = request.POST.get('goal')
+
+#         # Validate input
+#         if not weight or not goal:
+#             return JsonResponse({'success': False, 'error': 'Both weight and goal are required.'}, status=400)
+
+#         # Ensure weight is a valid number
+#         try:
+#             weight = float(weight)
+#             if weight <= 0:
+#                 return JsonResponse({'success': False, 'error': 'Weight must be a positive number.'}, status=400)
+#         except ValueError:
+#             return JsonResponse({'success': False, 'error': 'Invalid weight format.'}, status=400)
+
+#         # Get or create user's goal
+#         user_goal, created = UserGoal.objects.get_or_create(user=request.user)
+#         user_goal.weight = weight
+#         user_goal.goal = goal
+#         user_goal.save()
+#         print(f"Saved goal for {request.user.username}: {user_goal.weight}kg, {user_goal.goal}")
+
+
+#         # Handle AJAX request
+#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#             return JsonResponse({'success': True})
+
+#         # Redirect to calorie calculator page if form submitted normally
+#         return redirect('calorie')
+
+#     # Render goal setting page for GET request
+#     return render(request, 'set_goal.html')
+
+@login_required
+def set_goal(request):
+    user_goal = UserGoal.objects.filter(user=request.user).first()
+
+    if request.method == 'POST':
+        weight = request.POST.get('weight')
+        goal = request.POST.get('goal')
+
+        if not weight or not goal:
+            return JsonResponse({'success': False, 'error': 'Both weight and goal are required.'}, status=400)
+
+        try:
+            weight = float(weight)
+            if weight <= 0:
+                return JsonResponse({'success': False, 'error': 'Weight must be a positive number.'}, status=400)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid weight format.'}, status=400)
+
+        # user_goal, created = UserGoal.objects.get_or_create(user=request.user)
+        # user_goal.weight = weight
+        # user_goal.goal = goal
+        # user_goal.save()
+        user_goal, created = UserGoal.objects.get_or_create(
+            user=request.user,
+            defaults={'weight': weight, 'goal': goal}
+        )
+
+        if not created:
+            # If goal already exists, update it
+            user_goal.weight = weight
+            user_goal.goal = goal
+            user_goal.save()
+
+        print(f"Saved goal for {request.user.username}: {user_goal.weight}kg, {user_goal.goal}")
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        return redirect('calorie')
+
+    # For GET request, send existing goal to template
+    return render(request, 'set_goal.html', {
+        'user_goal': user_goal
+    })
+
+
+# def get_weekly_progress(request):
+#     user = request.user
+#     last_week = now().date() - timedelta(days=6)
+#     weekly_records = DailyCalorieRecord.objects.filter(user=user, date__gte=last_week).order_by('date')
+
+#     weekly_data = []
+#     net_weekly_calories = 0
+#     day_count = 1
+
+#     for record in weekly_records:
+#         net_weekly_calories += record.net_calories
+#         weekly_data.append({
+#             "day": f"Day {day_count}",
+#             "net_calories": record.net_calories
+#         })
+#         day_count += 1
+
+#     # Fetch actual user goal
+#     user_goal_obj = UserGoal.objects.filter(user=user).first()
+#     user_goal = user_goal_obj.goal if user_goal_obj else "maintain"
+
+#     # Determine progress
+#     progress_status = "Good" if (
+#         (user_goal == "gain" and net_weekly_calories > 0) or 
+#         (user_goal == "lose" and net_weekly_calories < 0) or 
+#         (user_goal == "maintain" and abs(net_weekly_calories) < 500)
+#     ) else "Bad"
+
+#     return JsonResponse({
+#         "weekly_data": weekly_data,
+#         "progress_status": progress_status
+#     })
+from datetime import timedelta
 
 def get_weekly_progress(request):
     user = request.user
-    last_week = now().date() - timedelta(days=6)
-    weekly_records = DailyCalorieRecord.objects.filter(user=user, date__gte=last_week).order_by('date')
+    today = now().date()
+    last_week = today - timedelta(days=6)
+
+    # Create a dict with existing records
+    records = DailyCalorieRecord.objects.filter(user=user, date__gte=last_week).order_by('date')
+    record_dict = {r.date: r.net_calories for r in records}
 
     weekly_data = []
     net_weekly_calories = 0
 
-    for record in weekly_records:
-        net_weekly_calories += record.net_calories
+    for i in range(7):
+        current_day = last_week + timedelta(days=i)
+        net_cal = record_dict.get(current_day, 0)
         weekly_data.append({
-            "date": record.date.strftime('%Y-%m-%d'),
-            "net_calories": record.net_calories
+            "day": f"Day {i+1}",
+            "net_calories": net_cal
         })
+        net_weekly_calories += net_cal
+
+    # Fetch actual user goal
+    user_goal_obj = UserGoal.objects.filter(user=user).first()
+    user_goal = user_goal_obj.goal if user_goal_obj else "maintain"
 
     # Determine progress
-    user_goal = "maintain"  # Fetch user goal from your goal model
     progress_status = "Good" if (
         (user_goal == "gain" and net_weekly_calories > 0) or 
         (user_goal == "lose" and net_weekly_calories < 0) or 
         (user_goal == "maintain" and abs(net_weekly_calories) < 500)
     ) else "Bad"
 
-    return JsonResponse({"weekly_data": weekly_data, "progress_status": progress_status})
+    return JsonResponse({
+        "weekly_data": weekly_data,
+        "progress_status": progress_status
+    })

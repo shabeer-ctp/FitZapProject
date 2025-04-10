@@ -1,157 +1,4 @@
-{% comment %} 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calorie Calculator</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
 
-<div class="container mt-5">
-    <h1 class="text-center">Calorie Calculator</h1>
-
-    <!-- Food Intake Section -->
-    <div class="card">
-        <div class="card-body">
-            <h2>Food Intake</h2>
-            <div id="food-items-container">
-                <div class="food-item-row">
-                    <label>Select Food Item:</label>
-                    <select name="food_item[]" class="form-control food-item">
-                        <option value="">-- Choose a food item --</option>
-                        {% for food in food_items_list %}
-                            <option value="{{ food.id }}" data-calories="{{ food.calories }}" data-unit="{{ food.unit_type }}">
-                                {{ food.name }} ({{ food.calories }} kcal per {{ food.unit_type }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <label>Quantity:</label>
-                    <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
-                    <button type="button" class="btn btn-danger remove-food-item mt-2">Remove</button>
-                </div>
-            </div>
-            <button type="button" id="add-food-item" class="btn btn-secondary mt-2">+ Add More Food</button>
-            <p>Total Calories from Food: <strong id="total-calories-intake">0</strong> kcal</p>
-        </div>
-    </div>
-
-    <!-- Workout Section -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h2>Workout</h2>
-            <div id="workout-container">
-                <div class="workout-row">
-                    <label>Select Workout:</label>
-                    <select name="workout[]" class="form-control workout-item">
-                        <option value="">-- Choose a workout --</option>
-                        {% for workout in workouts %}
-                        <option value="{{ workout.id }}" data-burn="{{ workout.calories_burned }}">
-                            {{ workout.name }} (Burns {{ workout.calories_burned }} kcal/30 min)
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <label>Duration (minutes):</label>
-                    <input type="number" name="duration[]" class="form-control duration" min="1" step="1" required>
-                    <button type="button" class="btn btn-danger remove-workout mt-2">Remove</button>
-                </div>
-            </div>
-            <button type="button" id="add-workout" class="btn btn-secondary mt-2">+ Add More Workout</button>
-            <p>Total Calories Burned: <strong id="total-calories-burnt">0</strong> kcal</p>
-        </div>
-    </div>
-
-    <!-- Net Calories Section -->
-    <div class="card mt-4">
-        <div class="card-body text-center">
-            <button type="button" id="calculate-total" class="btn btn-primary btn-lg">Calculate Total Calories</button>
-            <h3 class="mt-3">Net Calories</h3>
-            <p><strong id="net-calories">0</strong> kcal</p>
-            <p>Estimated Weight Change Per Week: <strong id="weight-change">0</strong> kg</p>
-        </div>
-    </div>
-</div>
-
-<script>
-$(document).ready(function() {
-    function updatePlaceholder(selectElement) {
-        let unitType = $(selectElement).find(':selected').data('unit');
-        let quantityInput = $(selectElement).closest(".food-item-row").find(".quantity");
-        
-        if (unitType === "count") {
-            quantityInput.attr("placeholder", "Enter quantity in count");
-        } else if (unitType === "g") {
-            quantityInput.attr("placeholder", "Enter quantity in grams");
-        } else if (unitType === "ml") {
-            quantityInput.attr("placeholder", "Enter quantity in ml");
-        } else {
-            quantityInput.attr("placeholder", "Enter quantity");
-        }
-    }
-
-    function updateTotalCalories() {
-        let totalCaloriesIntake = 0;
-        let totalCaloriesBurnt = 0;
-
-        $(".food-item-row").each(function() {
-            let selectedOption = $(this).find("select.food-item option:selected");
-            let caloriesPerUnit = parseFloat(selectedOption.data("calories")) || 0;
-            let unitType = selectedOption.data("unit");
-            let quantity = parseFloat($(this).find("input.quantity").val()) || 0;
-            let calculatedCalories = (unitType === "g" || unitType === "ml") ? (caloriesPerUnit / 100) * quantity : caloriesPerUnit * quantity;
-            totalCaloriesIntake += calculatedCalories;
-        });
-
-        $(".workout-row").each(function() {
-            let selectedOption = $(this).find("select.workout-item option:selected");
-            let caloriesBurnPer30Min = parseFloat(selectedOption.data("burn")) || 0;
-            let duration = parseFloat($(this).find("input.duration").val()) || 0;
-            let calculatedBurnedCalories = (caloriesBurnPer30Min / 30) * duration;
-            totalCaloriesBurnt += calculatedBurnedCalories;
-        });
-
-        let netCalories = totalCaloriesIntake - totalCaloriesBurnt;
-        let weightChange = (netCalories / 7700).toFixed(2);
-
-        $("#total-calories-intake").text(totalCaloriesIntake.toFixed(2) + " kcal");
-        $("#total-calories-burnt").text(totalCaloriesBurnt.toFixed(2) + " kcal");
-        $("#net-calories").text(netCalories.toFixed(2) + " kcal");
-        $("#weight-change").text(weightChange + " kg");
-    }
-
-    $(document).on("click", "#add-food-item", function() {
-        let newRow = $(".food-item-row").first().clone();
-        newRow.find("input").val("");
-        $("#food-items-container").append(newRow);
-    });
-
-    $(document).on("click", "#add-workout", function() {
-        let newRow = $(".workout-row").first().clone();
-        newRow.find("input").val("");
-        $("#workout-container").append(newRow);
-    });
-
-    $(document).on("click", ".remove-food-item", function() {
-        $(this).closest(".food-item-row").remove();
-        updateTotalCalories();
-    });
-
-    $(document).on("click", ".remove-workout", function() {
-        $(this).closest(".workout-row").remove();
-        updateTotalCalories();
-    });
-
-    $(document).on("change", ".food-item, .quantity, .workout-item, .duration", function() {
-        updateTotalCalories();
-    });
-
-    $("#calculate-total").click(updateTotalCalories);
-});
-</script>
-
-</body>
-</html> {% endcomment %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -193,6 +40,14 @@ $(document).ready(function() {
             <h3 class="mt-3">Net Calories</h3>
             <p><strong id="net-calories">0</strong> kcal</p>
             <p>Estimated Weight Change Per Week: <strong id="weight-change">0</strong> kg</p>
+            
+
+            {% if goal_text %}
+                <div class="alert alert-info text-center mt-3">
+                    🎯 <strong>Your Current Goal:</strong> {{ goal_text }}
+                </div>
+            {% endif %}
+
         </div>
     </div>
 
@@ -205,98 +60,215 @@ $(document).ready(function() {
         </div>
     </div>
 </div>
+{% if not user_goal or not user_goal.weight or not user_goal.goal %}
+<div id="goal-warning" class="alert alert-warning text-center mt-3">
+    ⚠️ You haven't set a goal yet! <a href="{% url 'set_goal' %}">Click here</a> to set your goal.
+</div>
+{% endif %}
 
 <script>
-$(document).ready(function() {
+{% comment %} $(document).ready(function() {
     let weeklyProgress = [];
-    let userGoal = "maintain"; // Replace with user’s actual goal from the database
-
-    function addFoodItem() {
-        let foodItemRow = `
-            <div class="food-item-row">
-                <label>Select Food Item:</label>
-                <select name="food_item[]" class="form-control food-item">
-                    <option value="">-- Choose a food item --</option>
-                    {% for food in food_items_list %}
-                        <option value="{{ food.id }}" data-calories="{{ food.calories }}" data-unit="{{ food.unit_type }}">
-                            {{ food.name }} ({{ food.calories }} kcal per {{ food.unit_type }})
-                        </option>
-                    {% endfor %}
-                </select>
-                <label>Quantity:</label>
-                <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
-                <button type="button" class="btn btn-danger remove-food-item mt-2">Remove</button>
-            </div>`;
-        $("#food-items-container").append(foodItemRow);
-    }
-
-    function addWorkoutItem() {
-        let workoutRow = `
-            <div class="workout-row">
-                <label>Select Workout:</label>
-                <select name="workout[]" class="form-control workout-item">
-                    <option value="">-- Choose a workout --</option>
-                    {% for workout in workouts %}
-                    <option value="{{ workout.id }}" data-burn="{{ workout.calories_burned }}">
-                        {{ workout.name }} (Burns {{ workout.calories_burned }} kcal/30 min)
-                    </option>
-                    {% endfor %}
-                </select>
-                <label>Duration (minutes):</label>
-                <input type="number" name="duration[]" class="form-control duration" min="1" step="1" required>
-                <button type="button" class="btn btn-danger remove-workout mt-2">Remove</button>
-            </div>`;
-        $("#workout-container").append(workoutRow);
-    }
-
-    function updateProgressChart() {
-        let ctx = document.getElementById('progressChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
-                datasets: [{
-                    label: 'Net Calories',
-                    data: weeklyProgress,
-                    borderColor: 'blue',
-                    fill: false
-                }]
+    let userGoal = "maintain"; // Replace with user’s actual goal from the database {% endcomment %}
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
-        });
-
-        let totalWeeklyCalories = weeklyProgress.reduce((a, b) => a + b, 0);
-        let weeklyWeightChange = (totalWeeklyCalories / 7700).toFixed(2);
-        let progressStatus = (userGoal === "gain" && weeklyWeightChange > 0) ||
-                             (userGoal === "lose" && weeklyWeightChange < 0) ||
-                             (userGoal === "maintain" && Math.abs(weeklyWeightChange) < 0.2) ? "Good" : "Bad";
-        $("#progress-status").text(progressStatus);
+        }
+        return cookieValue;
     }
 
-    $("#calculate-total").click(function() {
-        let totalCaloriesIntake = parseFloat($("#total-calories-intake").text());
-        let totalCaloriesBurnt = parseFloat($("#total-calories-burnt").text());
+    $(document).ready(function() {
+        let weeklyProgress = [];
+        let userGoal = "{{ goal|default:'none' }}";  
+    
+        // Show warning if no goal is set
+        if (userGoal === "none") {
+            $("#goal-warning").show();
+        }
+    
+        function updateFoodCalories() {
+            let totalCalories = 0;
+            $(".food-item-row").each(function() {
+                let foodSelect = $(this).find(".food-item");
+                let quantityInput = $(this).find(".quantity");
+    
+                let caloriesPerUnit = parseFloat(foodSelect.find(":selected").data("calories")) || 0;
+                let unitType = foodSelect.find(":selected").data("unit") || "";  
+                let quantity = parseFloat(quantityInput.val()) || 0;
+    
+                // Adjust calculation for 'ml' based items (assuming calories given per 100ml)
+                if (unitType === "ml") {
+                    totalCalories += (caloriesPerUnit / 100) * quantity;
+                } else {
+                    totalCalories += caloriesPerUnit * quantity;
+                }
+    
+                // Update placeholder dynamically based on unit type
+                quantityInput.attr("placeholder", `Enter quantity in ${unitType}`);
+            });
+    
+            $("#total-calories-intake").text(totalCalories.toFixed(2));
+            calculateNetCalories();
+        }
+    
+        function updateWorkoutCalories() {
+            let totalCaloriesBurned = 0;
+            $(".workout-row").each(function() {
+                let workoutSelect = $(this).find(".workout-item");
+                let durationInput = $(this).find(".duration");
+    
+                let burnPer30Min = parseFloat(workoutSelect.find(":selected").data("burn")) || 0;
+                let duration = parseFloat(durationInput.val()) || 0;
+                
+                totalCaloriesBurned += (burnPer30Min / 30) * duration;
+            });
+    
+            $("#total-calories-burnt").text(totalCaloriesBurned.toFixed(2));
+            calculateNetCalories();
+        }
+    
+        function calculateNetCalories() {
+            let intake = parseFloat($("#total-calories-intake").text()) || 0;
+            let burnt = parseFloat($("#total-calories-burnt").text()) || 0;
+            let netCalories = intake - burnt;
+            $("#net-calories").text(netCalories.toFixed(2));
+    
+            let estimatedWeightChange = (netCalories * 7) / 7700;
+            $("#weight-change").text(estimatedWeightChange.toFixed(2));
+        }
+    
+        function addFoodItem() {
+            let foodItemRow = `
+                <div class="food-item-row">
+                    <label>Select Food Item:</label>
+                    <select name="food_item[]" class="form-control food-item">
+                        <option value="">-- Choose a food item --</option>
+                        {% for food in food_items_list %}
+                            <option value="{{ food.id }}" data-calories="{{ food.calories }}" data-unit="{{ food.unit_type }}">
+                                {{ food.name }} ({{ food.calories }} kcal per {{ food.unit_type }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <label>Quantity:</label>
+                    <input type="number" name="quantity[]" class="form-control quantity" min="0.1" step="0.1" placeholder="Enter quantity" required>
+                    <button type="button" class="btn btn-danger remove-food-item mt-2">Remove</button>
+                </div>`;
+            $("#food-items-container").append(foodItemRow);
+        }
+    
+        function addWorkoutItem() {
+            let workoutRow = `
+                <div class="workout-row">
+                    <label>Select Workout:</label>
+                    <select name="workout[]" class="form-control workout-item">
+                        <option value="">-- Choose a workout --</option>
+                        {% for workout in workouts %}
+                        <option value="{{ workout.id }}" data-burn="{{ workout.calories_burned }}">
+                            {{ workout.name }} (Burns {{ workout.calories_burned }} kcal/30 min)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label>Duration (minutes):</label>
+                    <input type="number" name="duration[]" class="form-control duration" min="1" step="1" required>
+                    <button type="button" class="btn btn-danger remove-workout mt-2">Remove</button>
+                </div>`;
+            $("#workout-container").append(workoutRow);
+        }
 
-        $.post("/save_daily_calories/", {
-            total_calories_intake: totalCaloriesIntake,
-            total_calories_burnt: totalCaloriesBurnt,
-            csrfmiddlewaretoken: "{{ csrf_token }}"
-        }, function(response) {
-            console.log("Daily data saved!");
+    
+        function updateProgressChart() {
+            let ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                    datasets: [{
+                        label: 'Net Calories',
+                        data: weeklyProgress,
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                }
+            });
+    
+            let totalWeeklyCalories = weeklyProgress.reduce((a, b) => a + b, 0);
+            let weeklyWeightChange = (totalWeeklyCalories / 7700).toFixed(2);
+    
+            let progressStatus = "Not Calculated";
+            if (userGoal === "weight_gain" && weeklyWeightChange > 0) {
+                progressStatus = "Good";
+            } else if (userGoal === "weight_loss" && weeklyWeightChange < 0) {
+                progressStatus = "Good";
+            } else if (userGoal === "maintain" && Math.abs(weeklyWeightChange) < 0.2) {
+                progressStatus = "Good";
+            } else {
+                progressStatus = "Bad";
+            }
+            $("#progress-status").text(progressStatus);
+        }
+    
+        $("#calculate-total").click(function() {
+            calculateNetCalories();
+        
+            let intake = parseFloat($("#total-calories-intake").text()) || 0;
+            let burnt = parseFloat($("#total-calories-burnt").text()) || 0;
+        
+            $.ajax({
+                type: "POST",
+                url: "{% url 'save_daily_calories' %}",
+                data: {
+                    total_calories_intake: intake,
+                    total_calories_burnt: burnt,
+                    csrfmiddlewaretoken: getCookie("csrftoken")
+                },
+                success: function(response) {
+                    console.log("✅ Daily record saved:", response.message);
+        
+                    // Fetch weekly progress *after* save
+                    $.get("{% url 'get_weekly_progress' %}", function(data) {
+                        $("#progress-status").text(data.progress_status);
+                        weeklyProgress = data.weekly_data.map(d => d.net_calories);
+                        updateProgressChart();
+                    });
+                },
+                error: function(xhr) {
+                    console.error("❌ Failed to save daily record:", xhr.responseText);
+                }
+            });
         });
-
-        $.get("/get_weekly_progress/", function(data) {
-            $("#progress-status").text(data.progress_status);
-
-            weeklyProgress = data.weekly_data.map(d => d.net_calories);
-            updateProgressChart();
+        
+    
+        $("#add-food-item").click(addFoodItem);
+        $("#add-workout").click(addWorkoutItem);
+    
+        // ✅ Event Listeners
+        $(document).on("change", ".food-item, .quantity", updateFoodCalories);
+        $(document).on("change", ".workout-item, .duration", updateWorkoutCalories);
+    
+        $(document).on("click", ".remove-food-item", function() {
+            $(this).parent().remove();
+            updateFoodCalories();
         });
+    
+        $(document).on("click", ".remove-workout", function() {
+            $(this).parent().remove();
+            updateWorkoutCalories();
+        });
+    
+        // Add default inputs on page load
+        addFoodItem();
+        addWorkoutItem();
     });
-
-    $("#add-food-item").click(addFoodItem);
-    $("#add-workout").click(addWorkoutItem);
-    addFoodItem();
-    addWorkoutItem();
-});
+    
+    
 </script>
 
 </body>
