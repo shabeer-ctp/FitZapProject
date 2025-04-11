@@ -46,11 +46,11 @@ class UserGoal(models.Model):
 def create_default_items(sender, instance, created, **kwargs):
     if created:  # Runs only when a new user is created
         default_foods = [
-            {"name": "Apple", "calories": 52},
-            {"name": "Banana", "calories": 89},
-            {"name": "Rice", "calories": 130},
-            {"name": "Chicken Breast", "calories": 165},
-            {"name": "Egg", "calories": 78}
+            {"name": "Apple", "calories": 52, "unit_type": "count"},
+            {"name": "Banana", "calories": 89, "unit_type": "count"},
+            {"name": "Rice", "calories": 130, "unit_type": "g"},
+            {"name": "Chicken Breast", "calories": 165, "unit_type": "g"},
+            {"name": "Egg", "calories": 78, "unit_type": "count"},
         ]
         default_workouts = [
             {"name": "Running", "calories_burned": 10},  # Per minute
@@ -60,7 +60,8 @@ def create_default_items(sender, instance, created, **kwargs):
         ]
 
         for food in default_foods:
-            FoodItem.objects.create(user=instance, name=food["name"], calories=food["calories"])
+            FoodItem.objects.create(user=instance, name=food["name"], calories=food["calories"],
+                unit_type=food["unit_type"])
 
         for workout in default_workouts:
             Workout.objects.create(user=instance, name=workout["name"], calories_burned=workout["calories_burned"])

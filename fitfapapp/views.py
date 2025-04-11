@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .serializers import RegisterSerializer, FoodItemSerializer, WorkoutSerializer
+from .serializers import RegisterSerializer, FoodItemSerializer, WorkoutSerializer, DailyCalorieRecordSerializer, UserGoalSerializer, WeeklyProgressSerializer
 from .models import DailyCalorieRecord, FoodItem, Workout, UserGoal
 from django.db import models
 from django.contrib.auth import authenticate, login, logout
@@ -101,6 +101,8 @@ def add_workout(request):
         form = WorkoutForm()
 
     return render(request, 'add_workout.html', {'form': form})
+
+
 
 # Calorie Calculator View
 from django.shortcuts import render
@@ -354,6 +356,74 @@ def add_workout_item_api(request):
         serializer.save(user=request.user)  # assign current user
         return Response({"message": "Workout item added successfully", "data": serializer.data}, status=201)
     return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_daily_calories_api(request):
+    serializer = DailyCalorieRecordSerializer(data=request.data)
+    if serializer.is_valid():
+        instance, created = DailyCalorieRecord.objects.update_or_create(
+            user=request.user,
+            date=now().date(),
+            defaults={
+                "total_calories_intake": serializer.validated_data['total_calories_intake'],
+                "total_calories_burnt": serializer.validated_data['total_calories_burnt'],
+            }
+        )
+        return Response({"message": "Daily calorie record saved successfully!"}, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_goal_api(request):
+    serializer = UserGoalSerializer(data=request.data)
+    if serializer.is_valid():
+        user_goal, created = UserGoal.objects.update_or_create(
+            user=request.user,
+            defaults={
+                "weight": serializer.validated_data["weight"],
+                "goal": serializer.validated_data["goal"],
+            }
+        )
+        return Response({"message": "Goal saved successfully!"}, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_weekly_progress_api(request):
+    today = now().date()
+    last_week = today - timedelta(days=6)
+
+    records = DailyCalorieRecord.objects.filter(user=request.user, date__gte=last_week).order_by('date')
+    record_dict = {r.date: r.net_calories for r in records}
+
+    weekly_data = []
+    net_weekly_calories = 0
+
+    for i in range(7):
+        current_day = last_week + timedelta(days=i)
+        net_cal = record_dict.get(current_day, 0)
+        weekly_data.append({
+            "day": f"Day {i+1}",
+            "net_calories": net_cal
+        })
+        net_weekly_calories += net_cal
+
+    user_goal_obj = UserGoal.objects.filter(user=request.user).first()
+    user_goal = user_goal_obj.goal if user_goal_obj else "maintain"
+
+    progress_status = "Good" if (
+        (user_goal == "gain" and net_weekly_calories > 0) or 
+        (user_goal == "lose" and net_weekly_calories < 0) or 
+        (user_goal == "maintain" and abs(net_weekly_calories) < 500)
+    ) else "Bad"
+
+    return Response({
+        "weekly_data": weekly_data,
+        "progress_status": progress_status
+    }, status=200)
     
 def logout_user(request):
     logout(request)

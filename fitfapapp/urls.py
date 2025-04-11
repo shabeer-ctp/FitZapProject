@@ -23,6 +23,9 @@ urlpatterns = [
     path('api/workouts/<int:id>/delete/', views.delete_workout_item_api),
     path('api/food-items/add/', views.add_food_item_api),
     path('api/workouts/add/', views.add_workout_item_api),
+    path('api/save-daily-calories/', views.save_daily_calories_api, name='save_daily_calories_api'),
+    path('api/set-goal/', views.set_goal_api, name='set_goal_api'),
+    path('api/weekly-progress/', views.get_weekly_progress_api, name='get_weekly_progress_api'),
 
     path('calories/', views.calorie_calculator, name='calorie_calculator'),
     path('logout/', views.logout_user, name='logout'),

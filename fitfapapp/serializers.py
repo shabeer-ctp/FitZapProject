@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
-from .models import FoodItem, Workout
+from .models import FoodItem, Workout, DailyCalorieRecord, UserGoal
 
 class RegisterSerializer(serializers.ModelSerializer):
     confirmpassword = serializers.CharField(write_only=True)
@@ -60,3 +60,20 @@ class WorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workout
         fields = ['id', 'name', 'calories_burned']
+        
+class DailyCalorieRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyCalorieRecord
+        fields = ['total_calories_intake', 'total_calories_burnt']
+
+
+class UserGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserGoal
+        fields = ['weight', 'goal']
+
+
+# This one is optional (if you want to structure the response better)
+class WeeklyProgressSerializer(serializers.Serializer):
+    day = serializers.CharField()
+    net_calories = serializers.FloatField()
